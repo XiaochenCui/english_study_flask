@@ -1,0 +1,1 @@
+INSERT INTO .alembic_version (version_num) VALUES ('37c04c33f781');

@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ super() }}背单词{% endblock %}
+
+{% block content %}
+    <button id="start">开始背单词</button>
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h3 class="panel-title">单词背诵</h3>
+        </div>
+        <div id="panel-body">
+            {% if words %}
+                <div class="container-word container-word-word">
+                    <div class="word">
+                        <span id="word">{{ words[0].word }}</span>
+                        <span id="phonetic">{{ words[0].phonetic }}</span>
+                    </div>
+                </div>
+                <div class="container-word container-word-description">
+                    <div class="description">
+                        <span id="description">{{ words[0].description }}</span>
+                    </div>
+                </div>
+                <div class="container-word container-word-switch">
+                    <button type="button" class="btn btn-primary" id="next-word">下一个</button>
+                </div>
+            {% else %}
+                <div class="container-word container-word">
+                    <p>无可用单词</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        $(document).ready(function () {
+                    var words = null;
+                    var word = null;
+                    var index = 0;
+
+
+                    $('#start').click(function () {
+                        $.ajax({
+                            url: '{{ url_for('main.get_word') }}',
+                            data: 'next',
+                            type: 'POST',
+                            success: function (response) {
+                                console.log(response);
+                                var obj = JSON.parse(response);
+                                words = $.map(obj.words, function (el) {
+                                    return el;
+                                });
+                                var index = words.indexOf('list');
+                                if (index > -1) {
+                                    words.splice(index, 1);
+                                }
+                                word = words[0];
+
+                                change_word();
+                            },
+                            error: function (error) {
+                                console.log(error)
+                            }
+                        })
+                    });
+
+                    $('#next-word').click(function () {
+                        index += 1;
+                        word = words[index];
+
+                        change_word();
+
+                        console.log(word)
+                    });
+
+                    function change_word() {
+                        if (word != null) {
+                            $('#word').text(word.word);
+                            $('#phonetic').text(word.phonetic);
+                            $('#description').text(word.description)
+                        }
+                    }
+                }
+        );
+
+
+    </script>
+{% endblock %}

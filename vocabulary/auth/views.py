@@ -1,10 +1,16 @@
 from flask import render_template, redirect, request, url_for, flash
-from flask_login import login_user
+from flask_login import login_user, logout_user, current_user
 
 from vocabulary import db
 from vocabulary.models import User
 from . import auth
 from .forms import LoginForm, RegistrationForm
+
+
+@auth.before_app_request
+def before_request():
+    if current_user.is_authenticated:
+        current_user.ping()
 
 
 @auth.route('/login', methods=['GET', 'POST'])
@@ -18,6 +24,7 @@ def login():
             return redirect(url_for('main.index'))
         else:
             flash('incorrect username or password')
+            return redirect(url_for('auth.login'))
     else:
         return render_template('auth/login.html', form=form)
 
@@ -35,3 +42,15 @@ def register():
         return redirect(url_for('auth.login'))
     else:
         return render_template('auth/register.html', form=form)
+
+
+@auth.route('/change-password', methods=['GET', 'POST'])
+def change_password():
+    pass
+
+
+@auth.route('/logout', methods=['GET', 'POST'])
+def logout():
+    logout_user()
+    flash('你已经登出')
+    return redirect(url_for('main.index'))

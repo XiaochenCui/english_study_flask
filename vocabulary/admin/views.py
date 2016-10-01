@@ -40,7 +40,7 @@ class WordView(AdminModelView):
 
 admin = flask_admin.Admin(name='Admin',
                           index_view=flask_admin.AdminIndexView(),
-                          template_mode='bootstrap3')
+                          template_mode='bootstrap3',)
 
 # 增加view
 admin.add_view(UserView(User, db.session))

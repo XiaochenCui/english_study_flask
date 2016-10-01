@@ -1,0 +1,21 @@
+.panel{
+    margin: 5px auto;
+    width: 800px;
+}
+
+div.container-word{
+    margin: 5px 30px ;
+    width: 70%;
+}
+
+.word, .description{
+    display: inline-block;
+    margin: 5px 30px;
+    width: 70%
+}
+
+div.nav {
+    display: inline-block;
+    width: 20%;
+    margin-left:5%;
+}

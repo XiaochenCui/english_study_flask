@@ -1,13 +1,13 @@
 """initial migration
 
-Revision ID: df98012b3fef
+Revision ID: ec0c8ee30d4f
 Revises: None
-Create Date: 2016-09-29 20:11:54.378769
+Create Date: 2016-10-01 20:20:01.855883
 
 """
 
 # revision identifiers, used by Alembic.
-revision = 'df98012b3fef'
+revision = 'ec0c8ee30d4f'
 down_revision = None
 
 from alembic import op
@@ -21,13 +21,18 @@ def upgrade():
     sa.Column('username', sa.String(length=64), nullable=True),
     sa.Column('password_hash', sa.String(length=128), nullable=True),
     sa.Column('admin', sa.Boolean(), nullable=True),
+    sa.Column('level', sa.String(length=64), nullable=True),
+    sa.Column('words', sa.PickleType(), nullable=True),
+    sa.Column('learn_word_number_every_day', sa.Integer(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_users_username'), 'users', ['username'], unique=True)
     op.create_table('words',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('word', sa.String(length=128), nullable=True),
-    sa.Column('meaning', sa.Text(), nullable=True),
+    sa.Column('description', sa.Text(), nullable=True),
+    sa.Column('phonetic', sa.String(length=128), nullable=True),
+    sa.Column('tags', sa.PickleType(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_words_word'), 'words', ['word'], unique=True)
