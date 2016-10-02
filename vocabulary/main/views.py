@@ -26,22 +26,31 @@ def word():
         flash('请先设置单词等级')
         return redirect(url_for('main.preferences'))
     else:
-        # words_index 中的元素为一个tuple(world, 熟悉程度, 是否记住)
-        words_index = current_user.get_words(10)
+        words = current_user.get_words(10)
 
-        words = []
-        for i in words_index:
-            word = Word.query.filter_by(word=i[0]).first()
-            words.append(word)
+        words_obj = []
+        for word in words:
+            word_obj = Word.query.filter_by(word=word).first()
+            words_obj.append(word_obj)
 
-        return render_template('word_learn.html', words=words)
+        return render_template('word_learn.html', words=words_obj)
 
 
 @main.route('/get-word', methods=['POST'])
 def get_word():
-    words = current_user.get_words(5)
-    if word:
-        return json.dumps({'status': 'OK', 'words': serialize_list(words)})
+    words_with_flag = request.get_json(force=True, silent=True, cache=True)
+
+    current_user.set_words(words_with_flag)
+
+    words = current_user.get_words(10)
+
+    if words:
+        words_obj = []
+        for word in words:
+            word_obj = Word.query.filter_by(word=word).first()
+            words_obj.append(word_obj)
+
+        return json.dumps({'status': 'OK', 'words': serialize_list(words_obj)})
     else:
         return json.dumps({'status': 'ERROR'})
 

@@ -22,6 +22,8 @@
                     </div>
                 </div>
                 <div class="container-word container-word-switch">
+                    <button type="button" class="btn btn-default" id="known">认识</button>
+                    <button type="button" class="btn btn-default" id="unknown">不认识</button>
                     <button type="button" class="btn btn-primary" id="next-word">下一个</button>
                 </div>
             {% else %}
@@ -40,59 +42,107 @@
 
             // 初始化words
             var words = [];
-            var w = null;
+
             {% for word in words %}
-                w = [{'word': '{{ word.word }}'},
-                    {'phonetic': '{{ word.phonetic }}'},
-                    {'description': '{{ word.description }}'}];
+                var w = {};
+
+                w['word'] = '{{ word.word }}';
+                w['phonetic'] = '{{ word.phonetic }}';
+                w['description'] = '{{ word.description }}';
+
                 words.push(w);
             {% endfor %}
 
                     var word = null;
+
                     var index = 0;
 
 
-                    $('#start').click(function () {
+            $('#start').click(
+                    send_words
+            );
+
+            $('#next-word').click(
+                    next_word
+            );
+
+            $('#known').click(
+                    next_word,
+                    set_word_flag
+            );
+
+            $('#unknown').click(
+                    next_word,
+                    set_word_flag
+            );
+
+            function set_word_flag(flag) {
+                words[index]['known'] = flag
+            }
+
+            function next_word() {
+                if (index + 1 < words.length) {
+                    index += 1;
+                    word = words[index];
+
+                    change_word_text();
+                }
+                else {
+                    send_words()
+                }
+            }
+
+            function change_word_text() {
+                if (word != null) {
+                    $('#word').text(word.word);
+                    $('#phonetic').text(word.phonetic);
+                    $('#description').text(word.description);
+                }
+                else {
+
+                }
+            }
+
+            function send_words() {
+                var words_for_post_local = [];
+
+                for (var i in words) {
+                    var word_local = {
+                        word: words[i].word,
+                        flag: true
+                    };
+                    words_for_post_local.push(word_local)
+                }
+
+                var data = JSON.stringify(words_for_post_local, null, 2);
+
                         $.ajax({
                             url: '{{ url_for('main.get_word') }}',
-                            data: 'next',
+                            data: data,
                             type: 'POST',
+                            dataType: 'json',
                             success: function (response) {
                                 console.log(response);
                                 var obj = JSON.parse(response);
                                 words = $.map(obj.words, function (el) {
                                     return el;
                                 });
-                                var index = words.indexOf('list');
-                                if (index > -1) {
-                                    words.splice(index, 1);
-                                }
-                                word = words[0];
 
-                                change_word();
+                                // words中包含'list'项，去掉这一项
+                                var index_local = words.indexOf('list');
+                                if (index_local > -1) {
+                                    words.splice(index_local, 1);
+                                }
+
+                                // 重置index
+                                index = 0;
+
+                                change_word_text();
                             },
                             error: function (error) {
                                 console.log(error)
                             }
                         })
-                    });
-
-                    $('#next-word').click(function () {
-                        if (index + 1 < words.length) {
-                            index += 1;
-                            word = words[index];
-
-                            change_word();
-                        }
-
-                    });
-
-                    function change_word() {
-                        if (word != null) {
-                            $('#word').text(word[0].word);
-                            $('#phonetic').text(word[1].phonetic);
-                            $('#description').text(word[2].description);
-                        }
                     }
                 }
         );

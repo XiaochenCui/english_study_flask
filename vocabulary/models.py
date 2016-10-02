@@ -80,7 +80,7 @@ class User(UserMixin, db.Model):
     def is_administrator(self):
         return self.admin
 
-    def get_words(self, num):
+    def get_words_tuple(self, num):
         """
         返回n个待学的单词
 
@@ -95,30 +95,65 @@ class User(UserMixin, db.Model):
             self.words_queue.extend(self.words.keys())
 
         # 元素转为tuple
-        self.words_queue = [dict_to_tuple(i, False) for i in self.words_queue]
+        self.words_queue_taple = [dict_to_tuple(i, False) for i in self.words_queue]
 
         # 修正 num
-        if num > len(self.words_queue):
-            num = len(self.words_queue)
+        if num > len(self.words_queue_taple):
+            num = len(self.words_queue_taple)
 
-        words = [self.words_queue[i] for i in range(num)]
+        words = [self.words_queue_taple[i] for i in range(num)]
 
         return words
 
-    def set_words(self, words: list):
+    def get_words(self, num):
+        words_tuple = self.get_words_tuple(num)
+        words = [i[0] for i in words_tuple]
+
+        return words
+
+    def set_words(self, words_with_flag: list):
         """
         将学习结果回写
 
         Args:
-            words: list of tuples.
+            words_with_flag: list of tuples.
         """
-        for word in words:
-            # word[3] 表示是否已经记住，False 为没记住
-            if not word[3]:
-                # 将没记住的从deque中删除并加入队列尾部
-                if word in self.words_queue:
-                    self.words_queue.remove(word)
+        for word in words_with_flag:
+
+            # 将所有指定单词从deque中删除
+            User.recursion_delete(self.words_queue, word['word'])
+
+            # 将没记住的单词重新加入deque尾部
+            if not word['flag']:
                 self.words_queue.append(word)
+            # 将记住的单词回写，并将熟悉程度+1
+            else:
+                self.words_extent_increase(word['word'])
+
+    @staticmethod
+    def recursion_delete(iterator, element):
+        """
+        临时版本, iterator为deque,i为dict
+
+        Args:
+            iterator:
+            element:
+        """
+        for i in iterator:
+            if isinstance(i, dict):
+                if element in i.keys():
+                    iterator.remove(i)
+                    return True
+        return False
+
+    def words_extent_increase(self, word):
+        # update self.words
+        self.words[word] += 1
+
+        # update self.words_toady
+        for word in self.words_today:
+            if word[0] == word:
+                word[1] += 1
 
     def get_words_piece(self):
         pass
@@ -130,11 +165,16 @@ class User(UserMixin, db.Model):
 
     def init_words(self, level=None, initial=True):
         """
-        重置self.words，并把和用户等级相对应的单词全部装入self.words
+        把指定单词等级中的单词全部装入self.words
+
+        Args:
+            level: 如果为空，则将装入self.level对应的单词
+            initial: 如果为True,则先将self.words重置为空
         """
         words = Word.filter_by_level(self.level if not level else level)
 
-        self.words = TrieST()
+        if initial:
+            self.words = TrieST()
 
         for word in words:
             self.words = self.add_word(word.word)
@@ -259,6 +299,9 @@ class Word(db.Model):
         # 初始化self.admin值
         self.tags = random.choice(Word.LEVELS)
 
+    def init_data(self):
+        pass
+
     def set_tags(self, tags=None):
         self.tags = [random.choice(Word.LEVELS), ]
         db.session.add(self)
@@ -282,10 +325,9 @@ class Word(db.Model):
                                 'description': word['description'],
                                 'phonetic': word['phonetic']}
                     insert_if_not_exist(db.session, Word, **word_dic)
-                    print('add word: {}'.format(word['word']))
                 except KeyError:
                     traceback.print_exc()
-                    print(word)
+                    print('KeyError occurred in {}'.format(word))
 
     @classmethod
     def filter_by_level(cls, level, words=None):
