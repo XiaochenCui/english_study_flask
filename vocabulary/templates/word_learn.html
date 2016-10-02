@@ -37,7 +37,17 @@
     {{ super() }}
     <script>
         $(document).ready(function () {
-                    var words = null;
+
+            // 初始化words
+            var words = [];
+            var w = null;
+            {% for word in words %}
+                w = [{'word': '{{ word.word }}'},
+                    {'phonetic': '{{ word.phonetic }}'},
+                    {'description': '{{ word.description }}'}];
+                words.push(w);
+            {% endfor %}
+
                     var word = null;
                     var index = 0;
 
@@ -68,19 +78,20 @@
                     });
 
                     $('#next-word').click(function () {
-                        index += 1;
-                        word = words[index];
+                        if (index + 1 < words.length) {
+                            index += 1;
+                            word = words[index];
 
-                        change_word();
+                            change_word();
+                        }
 
-                        console.log(word)
                     });
 
                     function change_word() {
                         if (word != null) {
-                            $('#word').text(word.word);
-                            $('#phonetic').text(word.phonetic);
-                            $('#description').text(word.description)
+                            $('#word').text(word[0].word);
+                            $('#phonetic').text(word[1].phonetic);
+                            $('#description').text(word[2].description);
                         }
                     }
                 }
