@@ -10,6 +10,7 @@ from flask_login import current_user, login_required
 from externel_lib.serialize import serialize_list
 from vocabulary import db
 from vocabulary.main.forms import PreferencesForm
+from vocabulary.models import Word
 from . import main
 
 
@@ -24,7 +25,16 @@ def word():
     if not current_user.level:
         flash('请先设置单词等级')
         return redirect(url_for('main.preferences'))
-    return render_template('word_learn.html')
+    else:
+        # words_index 中的元素为一个tuple(world, 熟悉程度, 是否记住)
+        words_index = current_user.get_words(10)
+
+        words = []
+        for i in words_index:
+            word = Word.query.filter_by(word=i[0]).first()
+            words.append(word)
+
+        return render_template('word_learn.html', words=words)
 
 
 @main.route('/get-word', methods=['POST'])

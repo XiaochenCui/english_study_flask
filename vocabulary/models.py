@@ -6,6 +6,7 @@ import traceback
 from collections import defaultdict
 
 import datetime
+from collections import deque
 from functools import partial, partialmethod
 from threading import Thread
 
@@ -50,6 +51,8 @@ class User(UserMixin, db.Model):
     # 最后一次登录的时间
     last_seen = db.Column(db.DateTime(), default=datetime.datetime.today)
 
+    words_queue = deque()
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -83,17 +86,39 @@ class User(UserMixin, db.Model):
 
         Args:
             num:
+        Returns:
+            deque
         """
-        pass
+
+        # 如果单词队列空，则先进行初始化
+        if not self.words_queue:
+            self.words_queue.extend(self.words.keys())
+
+        # 元素转为tuple
+        self.words_queue = [dict_to_tuple(i, False) for i in self.words_queue]
+
+        # 修正 num
+        if num > len(self.words_queue):
+            num = len(self.words_queue)
+
+        words = [self.words_queue[i] for i in range(num)]
+
+        return words
 
     def set_words(self, words: list):
         """
         将学习结果回写
 
         Args:
-            words:
+            words: list of tuples.
         """
-        pass
+        for word in words:
+            # word[3] 表示是否已经记住，False 为没记住
+            if not word[3]:
+                # 将没记住的从deque中删除并加入队列尾部
+                if word in self.words_queue:
+                    self.words_queue.remove(word)
+                self.words_queue.append(word)
 
     def get_words_piece(self):
         pass
