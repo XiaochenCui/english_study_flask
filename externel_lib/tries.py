@@ -59,6 +59,14 @@ class TrieST(object):
         return self._get(node.next[index], key, d + 1)
 
     def keys(self):
+        """
+        返回一个包含所有键值对的列表
+        eg:
+            [{'a': 1}, {'b': 2}]
+
+        Returns:
+            list
+        """
         return self.keys_with_prefix('')
 
     def keys_with_prefix(self, pre: str):

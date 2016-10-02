@@ -6,13 +6,15 @@ import traceback
 from collections import defaultdict
 
 import datetime
+from functools import partial, partialmethod
 from threading import Thread
 
+from flask import current_app
 from flask_login import UserMixin
 
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from externel_lib.dictionary import get_the_value
+from externel_lib.dictionary import get_the_value, get_the_key, dict_to_tuple
 from externel_lib.tries import TrieST
 from . import db, login_manager
 
@@ -34,6 +36,10 @@ class User(UserMixin, db.Model):
     # 用trie树保存
     words = db.Column(db.PickleType)
 
+    # list ot tuples
+    # [(word, i, f)]:
+    #   i: 熟悉程度
+    #   f: 今天是否需要背诵
     words_today = db.Column(db.PickleType)
 
     words_update_time = db.Column(db.DateTime)
@@ -71,29 +77,37 @@ class User(UserMixin, db.Model):
     def is_administrator(self):
         return self.admin
 
-    def get_words(self, num=1):
+    def get_words(self, num):
         """
-        获取num个符合用户level的单词
+        返回n个待学的单词
 
         Args:
             num:
-
-        Returns:
-            list
         """
-        words = Word.filter_by_level(self.level)[:num]
-        return words
+        pass
+
+    def set_words(self, words: list):
+        """
+        将学习结果回写
+
+        Args:
+            words:
+        """
+        pass
+
+    def get_words_piece(self):
+        pass
 
     def set_level(self, level=None):
         self.level = random.choice(Word.LEVELS)
         db.session.add(self)
         db.session.commit()
 
-    def init_words(self):
+    def init_words(self, level=None, initial=True):
         """
-        把与用户等级对应的单词全部装入self.words
+        重置self.words，并把和用户等级相对应的单词全部装入self.words
         """
-        words = Word.filter_by_level(self.level)
+        words = Word.filter_by_level(self.level if not level else level)
 
         self.words = TrieST()
 
@@ -102,6 +116,8 @@ class User(UserMixin, db.Model):
 
         db.session.add(self)
         db.session.commit()
+
+    add_words = partialmethod(init_words, initial=False)
 
     def add_word(self, word, level=1):
         self.words[word] = level
@@ -115,48 +131,77 @@ class User(UserMixin, db.Model):
 
         # 更新今日单词
         if not self.words_update_time or self.words_update_time.date() != datetime.datetime.today().date():
-            t = Thread(target=self.update_words_today, args=[])
-            t.start()
-
-            self.words_update_time = datetime.datetime.today()
+            self.update_words_today()
 
         db.session.add(self)
 
+    def async_function(self, app, *args, **kwargs):
+        pass
+
     def update_words_today(self):
+        app = current_app._get_current_object()
+
+        t = Thread(target=self.update_words_today_async, args=[app])
+        t.start()
+
+        return t
+
+    def update_words_today_async(self, app):
         """
         更新今天需要学的单词
 
         Returns:
 
         """
-        if not self.level:
-            return
+        with app.app_context():
+            if not self:
+                return
 
-        # 获取单词列表
-        l = self.words.keys()
-        # 过滤
-        filter(lambda x: get_the_value(x) < 5, l)
-        # 排序
-        l.sort(key=get_the_value)
+            # 获取单词列表
+            l = self.words.keys()
+            # 过滤
+            filter(lambda x: get_the_value(x) < 5, l)
+            # 排序
+            l.sort(key=get_the_value)
 
-        dif = len(l) - self.learn_word_number_every_day
+            dif = len(l) - self.learn_word_number_every_day
 
-        # 如果l中的单词不够，从数据表words中再取
-        if dif < 0:
-            dif_words = Word.filter_by_level(self.level)[:(-dif)]
-            for word in dif_words:
-                self.add_word(word.word)
-            l += dif_words
+            # 如果l中的单词不够，从数据表words中再取
+            if dif < 0:
+                dif_words = Word.filter_by_level(self.level)[:(-dif)]
 
-        else:
-            l = l[:self.learn_word_number_every_day]
+                for word in dif_words:
+                    # 将新单词加入self.words
+                    self.add_word(word.word)
 
-        self.words_today = l
+                    # 将新单词加入self.words_today
+                    l += [{word.word: 1}]
 
-        db.session.add(self)
+            else:
+                l = l[:self.learn_word_number_every_day]
+
+            self.words_today = [dict_to_tuple(i, False) for i in l]
+
+            self.words_update_time = datetime.datetime.today()
+
+            current_db_sessions = db.session.object_session(self)
+            current_db_sessions.add(self)
 
     def is_first_login_in_today(self):
         pass
+
+    @staticmethod
+    def on_changed_level(target, value, oldvalue, initiator):
+        """
+        当User().level改变时，添加words
+
+        Args:
+            target:
+            value: new level
+            oldvalue:
+            initiator:
+        """
+        target.add_words(level=value)
 
     def __repr__(self):
         return '{cls}: {name}'.format(
@@ -167,7 +212,7 @@ class User(UserMixin, db.Model):
     __str__ = __repr__
 
 
-
+db.event.listen(User.level, 'set', User.on_changed_level)
 
 
 class Word(db.Model):

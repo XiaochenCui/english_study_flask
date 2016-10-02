@@ -12,7 +12,13 @@ class Config(object):
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = 'mysql://chenxiao:admin@121.42.62.137/english'
+    SQLALCHEMY_DATABASE_URI = 'mysql://root:admin@localhost/english'
 
 
-config = {'default': DevelopmentConfig}
+class TestingConfig(Config):
+    TEST = True
+    SQLALCHEMY_DATABASE_URI = 'mysql://root:admin@localhost/english_test'
+
+
+config = {'default': DevelopmentConfig,
+          'testing': TestingConfig}

@@ -4,6 +4,7 @@ from flask import flash
 from flask import redirect
 from flask import render_template
 from flask import request
+from flask import url_for
 from flask_login import current_user, login_required
 
 from externel_lib.serialize import serialize_list
@@ -20,8 +21,10 @@ def index():
 @main.route('/word', methods=['GET', 'POST'])
 @login_required
 def word():
-    words = current_user.get_words(5)
-    return render_template('word_learn.html', words=words)
+    if not current_user.level:
+        flash('请先设置单词等级')
+        return redirect(url_for('main.preferences'))
+    return render_template('word_learn.html')
 
 
 @main.route('/get-word', methods=['POST'])
