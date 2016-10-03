@@ -7,6 +7,7 @@ from collections import defaultdict
 
 import datetime
 from collections import deque
+from copy import copy
 from functools import partial, partialmethod
 from threading import Thread
 
@@ -44,6 +45,9 @@ class User(UserMixin, db.Model):
     words_today = db.Column(db.PickleType)
 
     words_update_time = db.Column(db.DateTime)
+
+    # 今天的任务是否完成
+    task_complied = db.Column(db.Boolean, default=False)
 
     # 每天的学习量
     learn_word_number_every_day = db.Column(db.Integer)
@@ -92,16 +96,17 @@ class User(UserMixin, db.Model):
 
         # 如果单词队列空，则先进行初始化
         if not self.words_queue:
-            self.words_queue.extend(self.words.keys())
+            self.words_queue.extend([i for i in filter(lambda i: not i[2], self.words_today)])
 
         # 元素转为tuple
-        self.words_queue_taple = [dict_to_tuple(i, False) for i in self.words_queue]
+        # self.words_queue_tuple = [dict_to_tuple(i, False) for i in self.words_queue]
 
         # 修正 num
-        if num > len(self.words_queue_taple):
-            num = len(self.words_queue_taple)
+        if num > len(self.words_queue):
+            num = len(self.words_queue)
 
-        words = [self.words_queue_taple[i] for i in range(num)]
+        # 切片 words=self.words_queue[:i]
+        words = [self.words_queue[i] for i in range(num)]
 
         return words
 
@@ -130,10 +135,17 @@ class User(UserMixin, db.Model):
             else:
                 self.words_extent_increase(word['word'])
 
+        # 如果队列空，则表示任务完成
+        if not self.words_queue:
+            self.task_complied = True
+
+        db.session.add(self)
+        db.session.commit()
+
     @staticmethod
     def recursion_delete(iterator, element):
         """
-        临时版本, iterator为deque,i为dict
+        临时版本, iterator为deque,i为dict或tuple
 
         Args:
             iterator:
@@ -144,16 +156,31 @@ class User(UserMixin, db.Model):
                 if element in i.keys():
                     iterator.remove(i)
                     return True
+            elif isinstance(i, tuple):
+                if element in i:
+                    iterator.remove(i)
+                    return True
         return False
 
     def words_extent_increase(self, word):
+        # copy self.words_toady
+        words_copy = copy(self.words)
+
         # update self.words
-        self.words[word] += 1
+        words_copy[word] += 1
+
+        self.words = copy(words_copy)
+
+        # copy self.words_toady
+        words_copy = copy(self.words_today)
 
         # update self.words_toady
-        for word in self.words_today:
-            if word[0] == word:
-                word[1] += 1
+        for i in range(len(words_copy)):
+            w = words_copy[i]
+            if w[0] == word:
+                words_copy[i] = (word, w[1] + 1, True)
+
+        self.words_today = copy(words_copy)
 
     def get_words_piece(self):
         pass
@@ -225,7 +252,7 @@ class User(UserMixin, db.Model):
             # 获取单词列表
             l = self.words.keys()
             # 过滤
-            filter(lambda x: get_the_value(x) < 5, l)
+            l = [i for i in filter(lambda x: get_the_value(x) < 5, l)]
             # 排序
             l.sort(key=get_the_value)
 

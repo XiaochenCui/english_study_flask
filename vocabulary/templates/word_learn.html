@@ -123,21 +123,32 @@
                             dataType: 'json',
                             success: function (response) {
                                 console.log(response);
-                                var obj = JSON.parse(response);
-                                words = $.map(obj.words, function (el) {
-                                    return el;
-                                });
 
-                                // words中包含'list'项，去掉这一项
-                                var index_local = words.indexOf('list');
-                                if (index_local > -1) {
-                                    words.splice(index_local, 1);
+                                if (response.status == 'COMPLIED') {
+                                    console.log('MISSION COMPLIED');
+
+                                    window.location.replace('{{ url_for('main.mission_complied') }}');
+                                }
+                                else {
+                                    var words_obj_local = response.words;
+
+                                    // 将words由object转为array
+                                    words = $.map(words_obj_local, function (value, index) {
+                                        return [value];
+                                    });
+
+                                    // words中包含'list'项，去掉这一项
+                                    var index_local = words.indexOf('list');
+                                    if (index_local > -1) {
+                                        words.splice(index_local, 1);
+                                    }
+
+                                    // 重置index
+                                    index = 0;
+
+                                    change_word_text();
                                 }
 
-                                // 重置index
-                                index = 0;
-
-                                change_word_text();
                             },
                             error: function (error) {
                                 console.log(error)

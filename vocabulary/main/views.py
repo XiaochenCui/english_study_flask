@@ -40,19 +40,31 @@ def word():
 def get_word():
     words_with_flag = request.get_json(force=True, silent=True, cache=True)
 
+    # 接受单词列表
     current_user.set_words(words_with_flag)
 
-    words = current_user.get_words(10)
-
-    if words:
-        words_obj = []
-        for word in words:
-            word_obj = Word.query.filter_by(word=word).first()
-            words_obj.append(word_obj)
-
-        return json.dumps({'status': 'OK', 'words': serialize_list(words_obj)})
+    if current_user.task_complied:
+        return json.dumps({'status': 'COMPLIED'})
     else:
-        return json.dumps({'status': 'ERROR'})
+        words = current_user.get_words(10)
+
+        if words:
+            words_obj = []
+            for word in words:
+                word_obj = Word.query.filter_by(word=word).first()
+                words_obj.append(word_obj)
+
+            return json.dumps({'status': 'OK', 'words': serialize_list(words_obj)})
+        else:
+            return json.dumps({'status': 'ERROR'})
+
+
+@main.route('/mission-complied', methods=['GET'])
+@login_required
+def mission_complied():
+    flash('任务完成！')
+
+    return render_template('mission_complied.html')
 
 
 @main.route('/preferences', methods=['GET', 'POST'])
