@@ -231,6 +231,9 @@ class User(UserMixin, db.Model):
         pass
 
     def update_words_today(self):
+        # 暂时解决了调用update_words_today_async时self.learn_word_number_every_dayw为None的情况
+        db.session.add(self)
+
         app = current_app._get_current_object()
 
         t = Thread(target=self.update_words_today_async, args=[app])
@@ -293,7 +296,7 @@ class User(UserMixin, db.Model):
             oldvalue:
             initiator:
         """
-        target.add_words(level=value)
+        target.init_words(level=value)
 
     def __repr__(self):
         return '{cls}: {name}'.format(

@@ -3,7 +3,6 @@
 {% block title %}{{ super() }}背单词{% endblock %}
 
 {% block content %}
-    <button id="start">开始背单词</button>
     <div class="panel panel-default">
         <div class="panel-heading">
             <h3 class="panel-title">单词背诵</h3>
@@ -58,26 +57,26 @@
                     var index = 0;
 
 
-            $('#start').click(
-                    send_words
-            );
-
             $('#next-word').click(
                     next_word
             );
 
             $('#known').click(
-                    next_word,
-                    set_word_flag
+                    function () {
+                        set_word_flag(true);
+                        next_word();
+                    }
             );
 
             $('#unknown').click(
-                    next_word,
-                    set_word_flag
+                    function () {
+                        set_word_flag(false);
+                        next_word();
+                    }
             );
 
             function set_word_flag(flag) {
-                words[index]['known'] = flag
+                words[index].flag = flag
             }
 
             function next_word() {
@@ -109,7 +108,7 @@
                 for (var i in words) {
                     var word_local = {
                         word: words[i].word,
-                        flag: true
+                        flag: words[i].flag
                     };
                     words_for_post_local.push(word_local)
                 }
