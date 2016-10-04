@@ -29,6 +29,10 @@ div#note_edit {
 }
 
 .note-context {
-    border: 1px solid #e0e0e0;;
+    border: 1px solid #e0e0e0;
+    margin: 10px;
+    padding: 15px 5px;
+    font-size: medium;
+    line-height: normal;
 }
 

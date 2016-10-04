@@ -33,7 +33,7 @@ def word():
             return render_template('mission_complied.html')
 
         else:
-            if len(current_user.words_today) < current_user.learn_word_number_every_day:
+            if not current_user.words_today:
                 # 未加载
                 flash('正在加载单词列表，请稍后刷新页面')
                 return render_template('word_learn.html')
