@@ -1,5 +1,3 @@
-from cxctools.string import char_at
-
 from external_lib.data_structure.queue import Queue
 
 
@@ -87,6 +85,23 @@ class TrieST(object):
 
     def __repr__(self):
         return str(self.keys())
+
+
+def char_at(s, index):
+    """
+    Return the str[index] in int class.
+
+    Args:
+        s:
+        index:
+    Returns:
+        value (int): the int value of s[index], -1 for IndexError.
+    """
+    if index < len(s):
+        value = ord(s[index])
+    else:
+        value = -1
+    return value
 
 
 if __name__ == '__main__':
