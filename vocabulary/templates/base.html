@@ -7,8 +7,9 @@
 {% block head %}
     {{ super() }}
     <meta charset="UTF-8">
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='heroic-features.css') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='iMac-icon.png') }}" type="image/x-icon">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/heroic-features.css') }}">
 {% endblock %}
 
 {% block navbar %}

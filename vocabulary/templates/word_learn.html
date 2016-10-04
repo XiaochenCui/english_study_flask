@@ -43,7 +43,7 @@
 
 {% block scripts %}
     {{ super() }}
-    <script>
+    <script type="text/javascript">
         $(document).ready(function () {
 
             // 初始化words
@@ -101,8 +101,8 @@
                     $('#phonetic').text(word.phonetic);
                     $('#description').text(word.description);
 
+                    // 更改查看笔记按钮的链接
                     var h = $('#view-notes').attr('href');
-
                     $('#view-notes').attr('href', (h.replace(/(.+\/).+/, '$1' + word.word)));
                 }
                 else {

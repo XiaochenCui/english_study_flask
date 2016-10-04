@@ -28,24 +28,27 @@ def word():
         flash('请先设置单词等级')
         return redirect(url_for('main.preferences'))
     else:
-        # 获取单词列表
-        words = current_user.get_words(10)
+        if current_user.task_complied:
+            flash('今天的单词任务已经完成')
+            return render_template('mission_complied.html')
 
-        index_list = range(len(words))
+        else:
+            if len(current_user.words_today) < current_user.learn_word_number_every_day:
+                # 未加载
+                flash('正在加载单词列表，请稍后刷新页面')
+                return render_template('word_learn.html')
+            else:
+                # 获取单词列表
+                words = current_user.get_words(10)
 
-        words_obj = []
-        notes_list = []
+                words_obj = []
 
-        for word in words:
-            word_obj = Word.query.filter_by(word=word).first()
-            if word_obj:
-                words_obj.append(word_obj)
+                for word in words:
+                    word_obj = Word.query.filter_by(word=word).first()
+                    if word_obj:
+                        words_obj.append(word_obj)
 
-                # 获取对应的笔记
-                note = Note.query.filter_by(word_id=word_obj.id).all()
-                notes_list.append(note)
-
-        return render_template('word_learn.html', words=words_obj, notes_list=notes_list, index_list=index_list)
+                return render_template('word_learn.html', words=words_obj)
 
 
 @main.route('/get-word', methods=['POST'])

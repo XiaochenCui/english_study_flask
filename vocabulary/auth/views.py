@@ -23,7 +23,7 @@ def login():
             login_user(user, remember=form.remember_me.data)
             return redirect(url_for('main.index'))
         else:
-            flash('incorrect username or password')
+            flash('用户名或密码错误')
             return redirect(url_for('auth.login'))
     else:
         return render_template('auth/login.html', form=form)

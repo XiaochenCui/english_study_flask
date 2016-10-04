@@ -6,13 +6,13 @@ from vocabulary.models import User
 
 
 class LoginForm(Form):
-    username = StringField('username', validators=[Length(1, 64)])
+    username = StringField('用户名', validators=[Length(1, 64)])
 
-    password = PasswordField('password', validators=[Length(1, 64)])
+    password = PasswordField('密码', validators=[Length(1, 64)])
 
-    remember_me = BooleanField('remember me')
+    remember_me = BooleanField('记住我')
 
-    submit = SubmitField('login')
+    submit = SubmitField('登录')
 
 
 class RegistrationForm(Form):
@@ -24,7 +24,7 @@ class RegistrationForm(Form):
     password2 = PasswordField('确认密码', validators=[
         InputRequired()])
 
-    submit = SubmitField('register')
+    submit = SubmitField('注册')
 
     def validate_username(self, field):
         if User.query.filter_by(username = field.data).first():
