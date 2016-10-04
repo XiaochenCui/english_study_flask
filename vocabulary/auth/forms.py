@@ -16,12 +16,12 @@ class LoginForm(Form):
 
 
 class RegistrationForm(Form):
-    username = StringField('usernmae', validators=[
+    username = StringField('用户名', validators=[
         InputRequired(), Length(1, 64), Regexp('^\w+$')])
 
-    password = PasswordField('password', validators=[
-        InputRequired(), EqualTo('password2', message='password must match!')])
-    password2 = PasswordField('assume password', validators=[
+    password = PasswordField('密码', validators=[
+        InputRequired(), EqualTo('password2', message='两次输入的密码必须相同')])
+    password2 = PasswordField('确认密码', validators=[
         InputRequired()])
 
     submit = SubmitField('register')

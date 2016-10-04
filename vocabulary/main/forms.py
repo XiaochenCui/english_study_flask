@@ -7,7 +7,7 @@ from vocabulary.models import Word, User
 
 
 class PreferencesForm(Form):
-    username = StringField('usernmae', validators=[
+    username = StringField('用户名', validators=[
         InputRequired(), Length(1, 64), Regexp('^\w+$')])
     level = SelectField('单词级别')
     learn_number = SelectField('每天的学习量', coerce=int)
