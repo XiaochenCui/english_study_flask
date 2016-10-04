@@ -5,6 +5,7 @@
 
 # python file
 *.py~
+*.pyc
 
 # Distribution / packaging
 .Python
@@ -32,3 +33,8 @@ var/
 
 # wiki
 *.wiki/
+
+# cache
+*__pycache__*
+
+
