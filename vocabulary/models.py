@@ -446,6 +446,12 @@ class Note(db.Model):
 
     @staticmethod
     def generate_fake(count=3000):
+        """
+        生成count个虚拟笔记
+
+        Args:
+            count:
+        """
         random.seed()
 
         success_insert = 0
@@ -473,6 +479,18 @@ class Note(db.Model):
 
     @staticmethod
     def get_notes(user_id, word):
+        """
+        对于一个给定的单词，返回:
+        (notes_mine, notes_others)
+            分别表示给定用户创建的单词的list，以及其他用户创建的单词的list
+
+        Args:
+            user_id:
+            word:
+
+        Returns:
+
+        """
         notes_mine = []
 
         result = db.engine.execute(
