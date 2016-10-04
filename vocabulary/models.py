@@ -11,13 +11,15 @@ from copy import copy
 from functools import partial, partialmethod
 from threading import Thread
 
+import forgery_py
 from flask import current_app
 from flask_login import UserMixin
 
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy.exc import IntegrityError
 
-from externel_lib.dictionary import get_the_value, get_the_key, dict_to_tuple
-from externel_lib.tries import TrieST
+from external_lib.dictionary import get_the_value, get_the_key, dict_to_tuple
+from external_lib.tries import TrieST
 from . import db, login_manager
 
 
@@ -54,6 +56,8 @@ class User(UserMixin, db.Model):
 
     # 最后一次登录的时间
     last_seen = db.Column(db.DateTime(), default=datetime.datetime.today)
+
+    notes = db.relationship('Note', backref='user')
 
     words_queue = deque()
 
@@ -125,14 +129,13 @@ class User(UserMixin, db.Model):
         """
         for word in words_with_flag:
 
-            # 将所有指定单词从deque中删除
-            User.recursion_delete(self.words_queue, word['word'])
-
             # 将没记住的单词重新加入deque尾部
             if not word['flag']:
-                self.words_queue.append(word)
-            # 将记住的单词回写，并将熟悉程度+1
+                self.words_queue = self.move_to_rigth(self.words_queue, word['word'])
+
+            # 将记住的单词删除，并将熟悉程度+1
             else:
+                User.recursion_delete(self.words_queue, word['word'])
                 self.words_extent_increase(word['word'])
 
         # 如果队列空，则表示任务完成
@@ -141,6 +144,22 @@ class User(UserMixin, db.Model):
 
         db.session.add(self)
         db.session.commit()
+
+    @staticmethod
+    def move_to_rigth(queue, word: str):
+        """
+        将队列中的指定word移到右侧
+
+        Args:
+            queue:
+            word:
+        """
+        q = copy(queue)
+        for i in queue:
+            if word == i[0]:
+                q.append(i)
+                q.remove(i)
+        return q
 
     @staticmethod
     def recursion_delete(iterator, element):
@@ -186,6 +205,12 @@ class User(UserMixin, db.Model):
         pass
 
     def set_level(self, level=None):
+        """
+        设置用户学习等级，如果未给定参数，则随机设定一个等级
+
+        Args:
+            level:
+        """
         self.level = random.choice(Word.LEVELS)
         db.session.add(self)
         db.session.commit()
@@ -209,6 +234,7 @@ class User(UserMixin, db.Model):
         db.session.add(self)
         db.session.commit()
 
+    # 此方法未完成，暂时无法使用
     add_words = partialmethod(init_words, initial=False)
 
     def add_word(self, word, level=1):
@@ -286,6 +312,32 @@ class User(UserMixin, db.Model):
         pass
 
     @staticmethod
+    def generate_fake(count=100):
+
+        random.seed()
+
+        success_insert = 0
+
+        for i in range(count):
+            user = User(
+                username=forgery_py.internet.user_name(True),
+                password=forgery_py.lorem_ipsum.word(),
+            )
+
+            # 设置等级和单词
+            user.set_level()
+            user.init_words()
+
+            db.session.add(user)
+            try:
+                db.session.commit()
+                success_insert += 1
+            except IntegrityError:
+                db.session.rollback()
+
+        print('success insert {} users.'.format(success_insert))
+
+    @staticmethod
     def on_changed_level(target, value, oldvalue, initiator):
         """
         当User().level改变时，添加words
@@ -320,6 +372,8 @@ class Word(db.Model):
     description = db.Column(db.Text)
     phonetic = db.Column(db.String(128))
     tags = db.Column(db.PickleType)
+
+    notes = db.relationship('Note', backref='word')
 
     LEVELS = ['CET4', 'CET6', 'TOEFL']
 
@@ -377,6 +431,69 @@ class Word(db.Model):
         )
 
     __str__ = __repr__
+
+
+class Note(db.Model):
+    __tablename__ = 'notes'
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    word_id = db.Column(db.Integer, db.ForeignKey('words.id'))
+
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+
+    context = db.Column(db.Text)
+
+    @staticmethod
+    def generate_fake(count=3000):
+        random.seed()
+
+        success_insert = 0
+
+        user_count = User.query.count()
+
+        for i in range(count):
+            user = User.query.offset(random.randint(0, user_count - 1)).first()
+
+            word_word = get_the_key(random.choice(user.words.keys()))
+            word = Word.query.filter_by(word=word_word).first()
+
+            note = Note(
+                word=word,
+                user=user,
+                context=forgery_py.lorem_ipsum.sentence()
+            )
+
+            db.session.add(note)
+            db.session.commit()
+
+            success_insert += 1
+
+        print('success insert {} notes.'.format(success_insert))
+
+    @staticmethod
+    def get_notes(user_id, word):
+        notes_mine = []
+
+        result = db.engine.execute(
+            "SELECT * FROM notes JOIN words ON notes.word_id = words.id WHERE notes.user_id={user_id} AND words.word='{word}';".format(
+                user_id=user_id, word=word))
+
+        for r in result:
+            notes_mine.append({'context': r['context'],
+                               'user': r['user_id']})
+
+        notes_others = []
+
+        result = db.engine.execute(
+            "SELECT * FROM notes JOIN words ON notes.word_id = words.id WHERE notes.user_id<>{user_id} AND words.word='{word}';".format(
+                user_id=user_id, word=word))
+
+        for r in result:
+            notes_others.append({'context': r['context'],
+                                 'user': r['user_id']})
+
+        return notes_mine, notes_others
 
 
 @login_manager.user_loader

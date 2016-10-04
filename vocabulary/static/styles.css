@@ -19,3 +19,16 @@ div.nav {
     width: 20%;
     margin-left:5%;
 }
+
+div#panel-note {
+    margin: 25px 0;
+}
+
+div#note_edit {
+    margin: 20px 0;
+}
+
+.note-context {
+    border: 1px solid #e0e0e0;;
+}
+

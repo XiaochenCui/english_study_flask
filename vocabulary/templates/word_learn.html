@@ -23,14 +23,21 @@
                 <div class="container-word container-word-switch">
                     <button type="button" class="btn btn-default" id="known">认识</button>
                     <button type="button" class="btn btn-default" id="unknown">不认识</button>
-                    <button type="button" class="btn btn-primary" id="next-word">下一个</button>
+                    <a id="view-notes" href="{{ url_for('main.notes', word=words[0].word) }}">
+                        <button type="button" class="btn btn-default">查看该单词的笔记
+                        </button>
+                    </a>
+
                 </div>
+
+
             {% else %}
                 <div class="container-word container-word">
                     <p>无可用单词</p>
                 </div>
             {% endif %}
         </div>
+
     </div>
 {% endblock %}
 
@@ -57,10 +64,6 @@
                     var index = 0;
 
 
-            $('#next-word').click(
-                    next_word
-            );
-
             $('#known').click(
                     function () {
                         set_word_flag(true);
@@ -75,9 +78,10 @@
                     }
             );
 
+
             function set_word_flag(flag) {
                 words[index].flag = flag
-            }
+                    }
 
             function next_word() {
                 if (index + 1 < words.length) {
@@ -96,6 +100,10 @@
                     $('#word').text(word.word);
                     $('#phonetic').text(word.phonetic);
                     $('#description').text(word.description);
+
+                    var h = $('#view-notes').attr('href');
+
+                    $('#view-notes').attr('href', (h.replace(/(.+\/).+/, '$1' + word.word)));
                 }
                 else {
 
@@ -113,6 +121,7 @@
                     words_for_post_local.push(word_local)
                 }
 
+                // convert an object to a string
                 var data = JSON.stringify(words_for_post_local, null, 2);
 
                         $.ajax({

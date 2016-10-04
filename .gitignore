@@ -31,4 +31,4 @@ var/
 *.sock
 
 # wiki
-*.wiki
+*.wiki/

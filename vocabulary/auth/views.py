@@ -4,7 +4,7 @@ from flask_login import login_user, logout_user, current_user
 from vocabulary import db
 from vocabulary.models import User
 from . import auth
-from .forms import LoginForm, RegistrationForm
+from .forms import LoginForm, RegistrationForm, ChangePasswordForm
 
 
 @auth.before_app_request
@@ -46,7 +46,16 @@ def register():
 
 @auth.route('/change-password', methods=['GET', 'POST'])
 def change_password():
-    pass
+    form = ChangePasswordForm()
+    if form.validate_on_submit():
+        if current_user.verify_password(form.old_password.data):
+            current_user.password = form.password.data
+            db.session.add(current_user)
+            flash('密码更改成功')
+            return redirect(url_for('main.index'))
+        else:
+            flash('密码不可用')
+    return render_template("auth/change_password.html", form=form)
 
 
 @auth.route('/logout', methods=['GET', 'POST'])

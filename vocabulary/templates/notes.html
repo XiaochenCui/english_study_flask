@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}{{ super() }}笔记{% endblock %}
+
+{% block page_content %}
+    <div class="page-header">
+        <h1>你好</h1>
+    </div>
+    <div id="panel-note" class="panel">
+        <ul class="nav nav-tabs">
+            <li class="active" id="note_mine_tab"><a data-toggle="tab" href="#notes-mine">我的笔记</a></li>
+            <li id="note_others_tab"><a data-toggle="tab" href="#notes-others">共享笔记</a></li>
+        </ul>
+
+        <div class="tab-content">
+            <div id="notes-mine" class="tab-pane fade in active">
+                {% for note in notes_mine %}
+                    <div class="note-context">
+                        {{ note.context }}
+                    </div>
+                {% endfor %}
+                <div id="note_edit">
+                    {{ wtf.quick_form(form) }}
+                </div>
+            </div>
+            <div id="notes-others" class="tab-pane fade">
+                {% for note in notes_others %}
+                    <div class="note-context">
+                        {{ note.context }}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

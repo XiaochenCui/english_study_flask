@@ -1,6 +1,6 @@
 from flask_login import current_user
 from flask_wtf import Form
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField, HiddenField, TextAreaField
 from wtforms.validators import DataRequired, Length, Regexp, EqualTo, ValidationError, InputRequired
 
 from vocabulary.models import Word, User
@@ -25,3 +25,10 @@ class PreferencesForm(Form):
         if field.data != current_user.username:
             if User.query.filter_by(username = field.data).first():
                 raise ValidationError('用户名已存在')
+
+
+class AddNoteForm(Form):
+    word = HiddenField(default='word')
+    context = TextAreaField('笔记')
+
+    submit = SubmitField('添加笔记')

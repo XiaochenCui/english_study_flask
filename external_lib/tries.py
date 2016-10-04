@@ -1,6 +1,6 @@
 from cxctools.string import char_at
 
-from externel_lib.data_structure.queue import Queue
+from external_lib.data_structure.queue import Queue
 
 
 class Node(object):
