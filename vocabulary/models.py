@@ -373,6 +373,9 @@ class Word(db.Model):
     phonetic = db.Column(db.String(128))
     tags = db.Column(db.PickleType)
 
+    # 例句
+    example_sentence = db.Column(db.Text)
+
     notes = db.relationship('Note', backref='word')
 
     LEVELS = ['CET4', 'CET6', 'TOEFL']
@@ -423,6 +426,20 @@ class Word(db.Model):
             if level in word.tags:
                 result.append(word)
         return result
+
+    @staticmethod
+    def generate_fake_example_sentence():
+
+        random.seed()
+
+        words = Word.query.all()
+
+        for word in words:
+            es = word.word + ' --- ' + forgery_py.lorem_ipsum.sentence()
+            word.example_sentence = es
+
+            db.session.add(word)
+            db.session.commit()
 
     def __repr__(self):
         return '{cls}: {word}'.format(

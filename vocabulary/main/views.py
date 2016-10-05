@@ -197,6 +197,7 @@ def preferences():
         current_user.learn_word_number_every_day = form.learn_number.data
 
         db.session.add(current_user)
+        db.session.commit()
 
         flash('设置已更改')
         return redirect(request.url)

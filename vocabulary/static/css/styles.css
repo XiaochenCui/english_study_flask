@@ -8,7 +8,7 @@ div.container-word{
     width: 70%;
 }
 
-.word, .description{
+.word, .description, .example-sentence {
     display: inline-block;
     margin: 5px 30px;
     width: 70%
@@ -34,5 +34,10 @@ div#note_edit {
     padding: 15px 5px;
     font-size: medium;
     line-height: normal;
+}
+
+.container-word {
+    margin: 3px 15px;
+    font-size: medium;
 }
 
