@@ -62,7 +62,7 @@
                 w['word'] = '{{ word.word }}';
                 w['phonetic'] = '{{ word.phonetic }}';
                 w['description'] = '{{ word.description }}';
-                w['exampleSentence'] = '{{ word.example_sentence }}';
+                w['example_sentence'] = '{{ word.example_sentence }}';
 
                 words.push(w);
             {% endfor %}
@@ -108,7 +108,7 @@
                     $('#word').text(word.word);
                     $('#phonetic').text(word.phonetic);
                     $('#description').text(word.description);
-                    $('#example-sentence').text(word.exampleSentence);
+                    $('#example-sentence').text(word.example_sentence);
 
                     // 更改查看笔记按钮的链接
                     var h = $('#view-notes').attr('href');
